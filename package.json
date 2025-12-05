@@ -8,6 +8,11 @@
     "backend"
   ],
   "scripts": {
+    "start": "bash start.sh",
+    "start:windows": "powershell -ExecutionPolicy Bypass -File ./start.ps1",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f postgres",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:backend": "npm run start:dev --workspace=backend",

@@ -58,7 +58,6 @@ export class OcrService {
       if (mimeType === 'application/pdf' || filePath.toLowerCase().endsWith('.pdf')) {
         try {
           const dataBuffer = await fs.readFile(filePath);
-          // pdf-parse v2.4.5: PDFParse is a class
           const pdfParseModule = require('pdf-parse');
           const PDFParse = pdfParseModule.PDFParse;
           

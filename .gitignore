@@ -44,6 +44,9 @@ Thumbs.db
 *.db-journal
 prisma/migrations/**/migration_lock.toml
 
+# Docker
+docker-compose.override.yml
+
 # Uploads
 uploads/
 backend/uploads/

@@ -22,6 +22,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:switch:postgres": "node -e \"const fs=require('fs');const s=fs.readFileSync('prisma/schema.prisma','utf8');fs.writeFileSync('prisma/schema.prisma',s.replace(/provider = \\\"sqlite\\\"/,'provider = \\\"postgresql\\\"'))\"",
+    "prisma:switch:sqlite": "node -e \"const fs=require('fs');const s=fs.readFileSync('prisma/schema.prisma','utf8');fs.writeFileSync('prisma/schema.prisma',s.replace(/provider = \\\"postgresql\\\"/,'provider = \\\"sqlite\\\"'))\"",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "postinstall": "prisma generate"

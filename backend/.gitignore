@@ -10,8 +10,9 @@ dist/
 .env.local
 .env.*.local
 
-# Vercel
+# Deployment
 .vercel
+.railway
 
 # IDE
 .vscode/

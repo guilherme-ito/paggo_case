@@ -4,92 +4,56 @@ Fullstack application for document OCR processing with LLM integration. Upload d
 
 ## 🚀 Live Application
 
-**Deployed App:** [Add your Vercel deployment URL here]
+**Deployed App:** [Live Demo](https://frontend-eight-nu-18.vercel.app)
 
-- Frontend: `https://your-app.vercel.app`
-- Backend API: `https://your-backend.railway.app/api`
+- Frontend: [https://frontend-eight-nu-18.vercel.app](https://frontend-eight-nu-18.vercel.app)
+- Backend API: [https://paggocase-production.up.railway.app/api](https://paggocase-production.up.railway.app/api)
 
 ## 📋 Prerequisites
 
 - **Node.js** >= 18.0.0
 - **npm** >= 9.0.0
+- **Docker & Docker Compose** (for local PostgreSQL database)
 - **OpenAI API Key** (optional, for LLM features)
 
 ## 🔧 Local Setup and Running
 
-### 1. Clone the repository
+### Quick Start
+
+Simply run the startup script:
 
 ```bash
-git clone <repository-url>
-cd paggo_case
+npm start
 ```
 
-### 2. Install dependencies
-
+Or directly:
 ```bash
-npm install
-npm install --workspaces
+bash start.sh
 ```
 
-### 3. Configure environment variables
+### What the Script Does
 
-#### Backend (`backend/.env`)
+The startup script automatically handles everything for you:
 
-Create `backend/.env` file:
+- ✅ **Checks prerequisites** - Verifies Node.js, npm, and Docker are installed
+- ✅ **Starts Docker** - Ensures Docker Desktop is running (starts it if needed)
+- ✅ **Starts PostgreSQL** - Launches the database container if not already running
+- ✅ **Creates environment files** - Generates `.env` files from examples if they don't exist
+- ✅ **Installs dependencies** - Installs npm packages only if `node_modules` don't exist
+- ✅ **Sets up database** - Generates Prisma client and runs migrations
+- ✅ **Creates directories** - Sets up uploads folder and other required directories
+- ✅ **Starts application** - Launches both frontend and backend servers
 
-```env
-DATABASE_URL="file:./prisma/dev.db"
-JWT_SECRET="your-super-secret-jwt-key"
-JWT_EXPIRES_IN="7d"
-OPENAI_API_KEY="your-openai-api-key"
-PORT=3001
-NODE_ENV="development"
-FRONTEND_URL="http://localhost:3000"
-MAX_FILE_SIZE=10485760
-UPLOAD_DEST="./uploads"
-```
+**Safe to run multiple times** - The script checks if things are already set up and skips those steps, so you can run it anytime without issues.
 
-#### Frontend (`frontend/.env.local`)
+### Access the Application
 
-Create `frontend/.env.local` file:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-```
-
-### 4. Set up the database
-
-```bash
-cd backend
-npm run prisma:generate
-npm run prisma:migrate
-cd ..
-```
-
-### 5. Run the application
-
-**Run both frontend and backend together:**
-
-```bash
-npm run dev
-```
-
-**Or run separately:**
-
-```bash
-# Terminal 1 - Backend
-npm run dev:backend
-
-# Terminal 2 - Frontend  
-npm run dev:frontend
-```
-
-### 6. Access the application
+Once the script finishes starting:
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3001/api
 
-### 7. First use
+### First Use
 
 1. Open http://localhost:3000
 2. Click "Create a new account"
@@ -148,7 +112,7 @@ paggo_case/
 
 - **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS, NextAuth.js
 - **Backend**: NestJS 11, TypeScript, Prisma ORM, Tesseract.js, OpenAI API
-- **Database**: SQLite (development) / PostgreSQL (production)
+- **Database**: PostgreSQL (both local and production)
 
 ## 📡 API Endpoints
 
@@ -170,7 +134,7 @@ paggo_case/
 
 ## 📝 Notes
 
-- The application uses SQLite for local development (no setup required)
-- For production deployment, PostgreSQL is recommended
+- **Database**: The application uses PostgreSQL for both local development (via Docker) and production (Railway). This ensures consistency and eliminates schema switching issues.
 - File uploads are stored locally in `backend/uploads/`
 - OCR processing happens asynchronously after upload
+- **Docker**: The local PostgreSQL database runs in Docker. Use `npm run docker:up` to start it and `npm run docker:down` to stop it.
