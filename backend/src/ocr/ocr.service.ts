@@ -25,53 +25,76 @@ export class OcrService {
 
       // Handle PDF files
       if (mimeType === 'application/pdf' || filePath.toLowerCase().endsWith('.pdf')) {
-        const dataBuffer = await fs.readFile(filePath);
-        // pdf-parse v2: PDFParse is a class, instantiate with buffer
-        const pdfParseModule = require('pdf-parse');
-        const PDFParse = pdfParseModule.PDFParse;
-        
-        if (!PDFParse) {
-          throw new Error('pdf-parse PDFParse class not found');
-        }
-        
-        // Create parser instance with data (not buffer)
-        const parser = new PDFParse({ data: dataBuffer });
-        // Get text using getText() method
-        const pdfData = await parser.getText();
-        
-        const processingTime = Date.now() - startTime;
+        try {
+          const dataBuffer = await fs.readFile(filePath);
+          // pdf-parse v2: PDFParse is a class, instantiate with buffer
+          const pdfParseModule = require('pdf-parse');
+          const PDFParse = pdfParseModule.PDFParse;
+          
+          if (!PDFParse) {
+            throw new Error('pdf-parse PDFParse class not found');
+          }
+          
+          // Create parser instance with data (not buffer)
+          const parser = new PDFParse({ data: dataBuffer });
+          // Get text using getText() method
+          const pdfData = await parser.getText();
+          
+          const processingTime = Date.now() - startTime;
 
-        return {
-          text: pdfData.text ? pdfData.text.trim() : '',
-          confidence: 100, // PDF text extraction is typically 100% accurate
-          processingTime,
-        };
+          return {
+            text: pdfData.text ? pdfData.text.trim() : '',
+            confidence: 100, // PDF text extraction is typically 100% accurate
+            processingTime,
+          };
+        } catch (pdfError) {
+          console.error('PDF parsing failed:', pdfError);
+          throw new Error(
+            `PDF text extraction failed: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`
+          );
+        }
       }
 
       // Handle image files with Tesseract OCR
-      // Create a Tesseract worker
-      const worker = await createWorker('eng');
+      // Read file as buffer for Node.js environment
+      const imageBuffer = await fs.readFile(filePath);
+      
+      try {
+        // Create a Tesseract worker - use the correct API for Node.js
+        const worker = await createWorker('eng', 1, {
+          logger: () => {}, // Suppress logs
+        });
 
-      // Perform OCR
-      const {
-        data: { text, confidence },
-      } = await worker.recognize(filePath);
+        // Perform OCR with buffer (works in Node.js)
+        const {
+          data: { text, confidence },
+        } = await worker.recognize(imageBuffer);
 
-      // Terminate the worker
-      await worker.terminate();
+        // Terminate the worker
+        await worker.terminate();
+
+        const processingTime = Date.now() - startTime;
+
+        return {
+          text: text.trim(),
+          confidence: confidence || 0,
+          processingTime,
+        };
+      } catch (tesseractError) {
+        // If Tesseract fails (e.g., DOMMatrix error in Node.js), provide a fallback
+        console.error('Tesseract OCR failed, this might be a Node.js compatibility issue:', tesseractError);
+        throw new Error(
+          `OCR processing failed: Tesseract.js encountered an error. This may be due to Node.js environment compatibility. Error: ${tesseractError instanceof Error ? tesseractError.message : 'Unknown error'}`
+        );
+      }
 
       const processingTime = Date.now() - startTime;
 
-      return {
-        text: text.trim(),
-        confidence: confidence || 0,
-        processingTime,
-      };
-    } catch (error) {
-      console.error('OCR processing error:', error);
-      throw new Error(
-        `OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    }
+      } catch (error) {
+        console.error('OCR processing error:', error);
+        throw new Error(
+          `OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
   }
 }
