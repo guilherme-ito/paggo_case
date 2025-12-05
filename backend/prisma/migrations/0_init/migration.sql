@@ -1,16 +1,18 @@
 -- CreateTable
 CREATE TABLE "users" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "name" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "documents" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "fileName" TEXT NOT NULL,
     "originalName" TEXT NOT NULL,
@@ -18,36 +20,40 @@ CREATE TABLE "documents" (
     "fileSize" INTEGER NOT NULL,
     "filePath" TEXT NOT NULL,
     "uploadStatus" TEXT NOT NULL DEFAULT 'PENDING',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "documents_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "documents_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ocr_results" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "documentId" TEXT NOT NULL,
     "extractedText" TEXT NOT NULL,
-    "confidence" REAL,
+    "summary" TEXT,
+    "confidence" DOUBLE PRECISION,
     "processingTime" INTEGER,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "error" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "ocr_results_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "documents" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ocr_results_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "llm_interactions" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "documentId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "prompt" TEXT NOT NULL,
     "response" TEXT NOT NULL,
     "tokensUsed" INTEGER,
     "model" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "llm_interactions_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "documents" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "llm_interactions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -76,3 +82,13 @@ CREATE INDEX "llm_interactions_type_idx" ON "llm_interactions"("type");
 
 -- CreateIndex
 CREATE INDEX "llm_interactions_createdAt_idx" ON "llm_interactions"("createdAt");
+
+-- AddForeignKey
+ALTER TABLE "documents" ADD CONSTRAINT "documents_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ocr_results" ADD CONSTRAINT "ocr_results_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "documents"("id") ON DELETE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "llm_interactions" ADD CONSTRAINT "llm_interactions_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "documents"("id") ON DELETE CASCADE;
+

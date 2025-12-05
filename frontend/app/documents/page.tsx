@@ -398,7 +398,7 @@ export default function DocumentsPage() {
                 No documents yet
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Get started by uploading your first document. We'll extract the text and help you interact with it using AI.
+                Get started by uploading your first document. We&apos;ll extract the text and help you interact with it using AI.
               </p>
               <Link
                 href="/documents/upload"
