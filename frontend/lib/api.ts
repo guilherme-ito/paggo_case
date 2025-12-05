@@ -76,10 +76,3 @@ export const documentsApi = {
   },
 };
 
-export interface ExplainDocumentDto {
-  context?: string;
-}
-
-export interface QueryDocumentDto {
-  query: string;
-}

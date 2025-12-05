@@ -25,7 +25,15 @@ export default function RegisterPage() {
       router.push('/documents');
       router.refresh();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
+      setError(errorMessage);
+      console.error('Error details:', {
+        message: errorMessage,
+        status: err.response?.status,
+        data: err.response?.data,
+        url: err.config?.url,
+      });
     } finally {
       setLoading(false);
     }

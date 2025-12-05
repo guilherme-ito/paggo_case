@@ -15,6 +15,9 @@ async function bootstrap() {
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Global prefix for all routes

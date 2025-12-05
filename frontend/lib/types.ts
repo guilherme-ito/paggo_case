@@ -62,3 +62,11 @@ export interface AuthResponse {
   access_token: string;
   user: User;
 }
+
+export interface ExplainDocumentDto {
+  context?: string;
+}
+
+export interface QueryDocumentDto {
+  query: string;
+}
