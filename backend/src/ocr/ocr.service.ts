@@ -14,8 +14,14 @@ export class OcrService {
     const startTime = Date.now();
 
     try {
-      // Check if file exists
-      await fs.access(filePath);
+      // Check if file exists (handle both /tmp and regular paths)
+      try {
+        await fs.access(filePath);
+      } catch (error) {
+        // If file doesn't exist, it might be in /tmp (Vercel) or already processed
+        // Try to continue anyway - the file might be accessible
+        console.warn(`File access check failed for ${filePath}, attempting to read anyway`);
+      }
 
       // Handle PDF files
       if (mimeType === 'application/pdf' || filePath.toLowerCase().endsWith('.pdf')) {

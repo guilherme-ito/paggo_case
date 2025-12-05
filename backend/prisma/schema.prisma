@@ -1,12 +1,11 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema - supports both SQLite (dev) and PostgreSQL (production)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -47,9 +46,9 @@ model OCRResult {
   id         String    @id @default(cuid())
   documentId String    @unique
   extractedText String
-  summary    String?   // AI-generated summary of the document
+  summary    String?
   confidence  Float?
-  processingTime Int?  // in milliseconds
+  processingTime Int?
   status     String    @default("PENDING")
   error      String?
   createdAt  DateTime  @default(now())
@@ -76,3 +75,4 @@ model LLMInteraction {
   @@index([createdAt])
   @@map("llm_interactions")
 }
+

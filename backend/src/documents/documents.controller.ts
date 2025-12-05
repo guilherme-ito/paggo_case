@@ -19,9 +19,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ExplainDocumentDto } from './dto/explain-document.dto';
 import { QueryDocumentDto } from './dto/query-document.dto';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 const archiver = require('archiver');
 
@@ -33,19 +33,21 @@ export class DocumentsController {
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          const uploadDir = process.env.UPLOAD_DEST || './uploads';
-          if (!existsSync(uploadDir)) {
-            mkdirSync(uploadDir, { recursive: true });
-          }
-          cb(null, uploadDir);
-        },
-        filename: (req, file, cb) => {
-          const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
-          cb(null, uniqueName);
-        },
-      }),
+      storage: process.env.NODE_ENV === 'production' && process.env.VERCEL
+        ? memoryStorage() // Use memory storage on Vercel
+        : diskStorage({
+            destination: (req, file, cb) => {
+              const uploadDir = process.env.UPLOAD_DEST || './uploads';
+              if (!existsSync(uploadDir)) {
+                mkdirSync(uploadDir, { recursive: true });
+              }
+              cb(null, uploadDir);
+            },
+            filename: (req, file, cb) => {
+              const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+              cb(null, uniqueName);
+            },
+          }),
       limits: {
         fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 10MB default
       },
@@ -80,16 +82,31 @@ export class DocumentsController {
     }
 
     try {
-      const uploadDir = process.env.UPLOAD_DEST || './uploads';
-      // Use absolute path
-      const absoluteUploadDir = uploadDir.startsWith('./') 
-        ? join(process.cwd(), uploadDir.replace('./', ''))
-        : uploadDir;
-      const filePath = join(absoluteUploadDir, file.filename);
+      let filePath: string;
+      let fileName: string;
+
+      // Handle Vercel/serverless environment (memory storage)
+      if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+        // Save to /tmp (only writable location on Vercel)
+        const tmpDir = '/tmp';
+        fileName = `${uuidv4()}${extname(file.originalname)}`;
+        filePath = join(tmpDir, fileName);
+        
+        // Write buffer to file
+        writeFileSync(filePath, file.buffer);
+      } else {
+        // Local development (disk storage)
+        const uploadDir = process.env.UPLOAD_DEST || './uploads';
+        const absoluteUploadDir = uploadDir.startsWith('./') 
+          ? join(process.cwd(), uploadDir.replace('./', ''))
+          : uploadDir;
+        fileName = file.filename;
+        filePath = join(absoluteUploadDir, fileName);
+      }
 
       console.log('Upload attempt:', {
         userId: user.id,
-        fileName: file.filename,
+        fileName,
         originalName: file.originalname,
         mimeType: file.mimetype,
         fileSize: file.size,
@@ -97,7 +114,7 @@ export class DocumentsController {
       });
 
       const document = await this.documentsService.createDocument(user.id, {
-        fileName: file.filename,
+        fileName,
         originalName: file.originalname,
         mimeType: file.mimetype,
         fileSize: file.size,
