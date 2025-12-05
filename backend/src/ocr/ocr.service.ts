@@ -2,6 +2,37 @@ import { Injectable } from '@nestjs/common';
 import { createWorker } from 'tesseract.js';
 import * as fs from 'fs/promises';
 
+// Polyfill DOMMatrix for Node.js environment (needed for pdf-parse v2.4.5 in production)
+if (typeof global.DOMMatrix === 'undefined') {
+  global.DOMMatrix = class DOMMatrix {
+    a = 1;
+    b = 0;
+    c = 0;
+    d = 1;
+    e = 0;
+    f = 0;
+    constructor(init?: string | number[]) {
+      if (init) {
+        if (typeof init === 'string') {
+          // Simple matrix parsing (basic implementation)
+          const values = init.match(/matrix\(([^)]+)\)/)?.[1]?.split(',').map(Number) || [];
+          if (values.length >= 6) {
+            this.a = values[0]; this.b = values[1];
+            this.c = values[2]; this.d = values[3];
+            this.e = values[4]; this.f = values[5];
+          }
+        }
+      }
+    }
+    multiply(other: any) { return this; }
+    translate(x: number, y: number) { return this; }
+    scale(x: number, y?: number) { return this; }
+    rotate(angle: number) { return this; }
+    invert() { return this; }
+    toString() { return `matrix(${this.a},${this.b},${this.c},${this.d},${this.e},${this.f})`; }
+  } as any;
+}
+
 export interface OCRResult {
   text: string;
   confidence: number;
@@ -27,7 +58,7 @@ export class OcrService {
       if (mimeType === 'application/pdf' || filePath.toLowerCase().endsWith('.pdf')) {
         try {
           const dataBuffer = await fs.readFile(filePath);
-          // pdf-parse v2: PDFParse is a class, instantiate with buffer
+          // pdf-parse v2.4.5: PDFParse is a class
           const pdfParseModule = require('pdf-parse');
           const PDFParse = pdfParseModule.PDFParse;
           
@@ -35,7 +66,7 @@ export class OcrService {
             throw new Error('pdf-parse PDFParse class not found');
           }
           
-          // Create parser instance with data (not buffer)
+          // Create parser instance with data buffer
           const parser = new PDFParse({ data: dataBuffer });
           // Get text using getText() method
           const pdfData = await parser.getText();
@@ -87,14 +118,11 @@ export class OcrService {
           `OCR processing failed: Tesseract.js encountered an error. This may be due to Node.js environment compatibility. Error: ${tesseractError instanceof Error ? tesseractError.message : 'Unknown error'}`
         );
       }
-
-      const processingTime = Date.now() - startTime;
-
-      } catch (error) {
-        console.error('OCR processing error:', error);
-        throw new Error(
-          `OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
-      }
+    } catch (error) {
+      console.error('OCR processing error:', error);
+      throw new Error(
+        `OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 }
